@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MCQ Practice — Library (Edit & Search)</title>
+<style>
+  :root{
+    --bg:#061219; --card:#0b1320; --muted:#9bb0bf; --text:#e6eef8;
+    --accent:#10b981; --danger:#ff4d4f; --info:#3b82f6; --glass: rgba(255,255,255,0.02);
+  }
+  *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a 0%, #071826 100%);color:var(--text);-webkit-font-smoothing:antialiased;}
+  .app{max-width:760px;margin:12px auto;padding:14px;display:flex;flex-direction:column;gap:14px;min-height:100vh;}
+
+  /* LIBRARY */
+  .library{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 28px rgba(2,6,23,0.6)}
+  .lib-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .title{font-size:18px;font-weight:800}
+  .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700;min-height:44px}
+  .btn.secondary{background:transparent;border:1px dashed rgba(255,255,255,0.03);font-weight:600}
+  input[type="file"]{display:none}
+
+  .searchRow{display:flex;gap:8px;align-items:center;width:100%;margin-top:12px}
+  .search{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.01);color:var(--text)}
+  .deck-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto;padding-right:6px}
+  .deck-item{padding:12px;border-radius:10px;background:var(--glass);display:flex;justify-content:space-between;align-items:center}
+  .deck-left{display:flex;flex-direction:column}
+  .deck-name{font-weight:800}
+  .deck-meta{color:var(--muted);font-size:13px;margin-top:6px}
+  .deck-actions{display:flex;gap:8px;align-items:center}
+
+  /* NEW: All buttons inside deck-actions have glassy look */
+  .deck-actions .btn {
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .deck-actions .btn.secondary {
+    background:transparent;
+    border:1px dashed rgba(255,255,255,0.03);
+  }
+
+  /* PRACTICE CARD */
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 28px rgba(2,6,23,0.45)}
+  .qrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .qtitle{font-size:18px;font-weight:800;margin:0}
+  .qmeta{color:var(--muted);font-size:13px}
+
+  .options{margin-top:12px;display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:720px){ .options{grid-template-columns:1fr 1fr} }
+
+  .option{background:transparent;border-radius:12px;padding:12px 14px;border:1px solid rgba(255,255,255,0.03);display:flex;gap:12px;align-items:center;cursor:pointer;position:relative;min-height:56px;transition:transform .12s ease,box-shadow .12s ease}
+  .option:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(2,6,23,0.45)}
+  .opt-label{min-width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.02);display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+  .opt-text{flex:1;font-size:15px}
+  .option.locked{pointer-events:none;opacity:0.95}
+
+  .option::after{content:"";position:absolute;left:0;right:0;height:6px;bottom:-8px;border-radius:6px;transform:scaleX(0);opacity:0;transition:transform .18s ease,opacity .18s ease}
+  .option.correct::after{background:linear-gradient(90deg,var(--accent), rgba(16,185,129,0.6));transform:scaleX(1);opacity:1}
+  .option.wrong::after{background:linear-gradient(90deg,var(--danger), rgba(255,77,79,0.6));transform:scaleX(1);opacity:1}
+
+  .actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
+  .stats{color:var(--muted);font-weight:700}
+  .small{color:var(--muted);font-size:13px;margin-top:8px}
+
+  /* Summary panel */
+  .summary{margin-top:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .summary-left{flex:1;min-width:180px}
+  .summary-right{width:140px;height:140px;display:flex;align-items:center;justify-content:center}
+
+  .list-inline{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{background:var(--glass);padding:8px 10px;border-radius:999px;font-weight:700;font-size:13px}
+
+  /* Footer actions */
+  .footer{display:flex;gap:8px;position:sticky;bottom:10px;padding-top:8px;background:transparent;z-index:30}
+  .btn-large{flex:1;min-height:52px;padding:12px 16px;border-radius:12px;font-weight:800}
+  .btn-finish{min-width:140px;background:linear-gradient(90deg,#0ea67a,#06a3ff);border:none;color:#032; font-weight:900}
+
+  /* Edit modal */
+  .modal-back{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:120}
+  .modal{width:92%;max-width:820px;background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+  textarea{width:100%;height:320px;background:rgba(255,255,255,0.02);color:var(--text);border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;font-family:monospace;font-size:14px;color:var(--text)}
+
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- LIBRARY -->
+    <div class="library" id="library">
+      <div class="lib-top">
+        <div>
+          <div class="title">MCQ Library</div>
+          <div class="subtitle">Import .txt blocks in [ ... ] format — use || between Q & options, and \\ between options. Mark correct option with *.</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+          <label class="btn" for="fileInput">Import .txt</label>
+          <input id="fileInput" type="file" accept=".txt"/>
+        </div>
+      </div>
+
+      <div class="searchRow">
+        <input id="searchInput" class="search" placeholder="Search decks by name..." />
+      </div>
+
+      <div style="margin-top:12px" class="muted">Loaded decks</div>
+      <div class="deck-list" id="deckList" aria-live="polite"></div>
+    </div>
+
+    <!-- PRACTICE -->
+    <div class="card" id="practiceCard">
+      <div id="noDeck">
+        <div style="font-weight:800;font-size:18px">No deck loaded</div>
+        <div class="muted" style="margin-top:6px">Import a .txt and press Start Practice on a deck to begin. Decks save locally.</div>
+      </div>
+
+      <div id="practice" style="display:none">
+        <div class="qrow">
+          <div>
+            <div class="qtitle" id="qTitle">Question</div>
+            <div class="qmeta" id="qMeta">Card 0 of 0</div>
+          </div>
+          <div class="qmeta" id="dueCount">Due: 0</div>
+        </div>
+
+        <div class="options" id="options"></div>
+
+        <div class="actions">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="showAnswer" class="btn secondary">Show Answer</button>
+            <button id="startRelearn" class="btn secondary" style="display:none">Relearn (incorrect/unattempted)</button>
+          </div>
+          <div class="stats" id="stats">Attempted: 0 • Correct: 0 • Incorrect: 0 • Unattempted: 0</div>
+        </div>
+
+        <div id="summaryPanel" style="display:none" class="summary">
+          <div class="summary-left">
+            <div style="font-weight:800">Session Summary</div>
+            <div class="muted" id="summaryCounts" style="margin-top:6px">—</div>
+
+            <div style="margin-top:10px;font-weight:700">Incorrect questions</div>
+            <div class="list-inline" id="incorrectList"></div>
+
+            <div style="margin-top:10px;font-weight:700">Unattempted questions</div>
+            <div class="list-inline" id="unattemptedList"></div>
+
+            <div style="margin-top:12px;display:flex;gap:10px">
+              <button id="relearnStart" class="btn">Start Relearn</button>
+              <button id="finishSummary" class="btn secondary">Finish</button>
+            </div>
+          </div>
+
+          <div class="summary-right" id="accuracyChart"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <button id="skipBtn" class="btn btn-large">Skip</button>
+      <button id="finishBtn" class="btn btn-large btn-finish">Finish Test</button>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-back" id="modalBack">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="font-weight:800" id="modalTitle">Edit Deck</div>
+        <div style="display:flex;gap:8px">
+          <button id="modalSave" class="btn">Save</button>
+          <button id="modalCancel" class="btn secondary">Cancel</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <textarea id="modalTextarea" spellcheck="false"></textarea>
+      </div>
+      <div class="muted" style="margin-top:8px">Edit the raw .txt blocks (each question inside [ ... ]) and press Save. Format must be unchanged.</div>
+    </div>
+  </div>
+
+<script>
+const STORAGE = 'mcq_confirmed_decks_v2';
+const fileInput = document.getElementById('fileInput');
+const deckListEl = document.getElementById('deckList');
+const searchInput = document.getElementById('searchInput');
+
+const noDeck = document.getElementById('noDeck');
+const practice = document.getElementById('practice');
+const qTitle = document.getElementById('qTitle');
+const qMeta = document.getElementById('qMeta');
+const dueCount = document.getElementById('dueCount');
+const optionsEl = document.getElementById('options');
+const statsEl = document.getElementById('stats');
+
+const showAnswer = document.getElementById('showAnswer');
+const startRelearn = document.getElementById('startRelearn');
+
+const summaryPanel = document.getElementById('summaryPanel');
+const summaryCounts = document.getElementById('summaryCounts');
+const incorrectList = document.getElementById('incorrectList');
+const unattemptedList = document.getElementById('unattemptedList');
+const relearnStart = document.getElementById('relearnStart');
+const finishSummary = document.getElementById('finishSummary');
+const accuracyChart = document.getElementById('accuracyChart');
+
+const skipBtn = document.getElementById('skipBtn');
+const finishBtn = document.getElementById('finishBtn');
+
+const modalBack = document.getElementById('modalBack');
+const modalTextarea = document.getElementById('modalTextarea');
+const modalTitle = document.getElementById('modalTitle');
+const modalSave = document.getElementById('modalSave');
+const modalCancel = document.getElementById('modalCancel');
+
+let decks = loadDecks();
+let filteredDeckIndices = [];
+let activeDeck = null;
+let order = [];
+let pos = 0;
+let session = [];
+let stats = {attempted:0,correct:0,incorrect:0,unattempted:0};
+let mode = 'normal';
+let editingDeckIndex = null;
+
+function loadDecks(){
+  try{ const raw = localStorage.getItem(STORAGE); return raw ? JSON.parse(raw) : []; } catch(e){ console.error(e); return []; }
+}
+function saveDecks(){ try{ localStorage.setItem(STORAGE, JSON.stringify(decks)); } catch(e){ console.error(e); } }
+
+function parseTextToCards(text){
+  if(!text) return [];
+  const normalized = text.replace(/\r\n/g,'\n');
+  const re = /\[([\s\S]*?)\]/g;
+  let m, blocks = [];
+  while((m = re.exec(normalized)) !== null) blocks.push(m[1].trim());
+  const cards = [];
+  for(const block of blocks){
+    const parts = block.split('||').map(s=>s.trim());
+    if(parts.length < 2) continue;
+    const q = parts[0].replace(/^\d+\.\s*/,'').trim();
+    const optsRaw = parts[1];
+    const rawOpts = optsRaw.split(/\\\\|\\(?!\s)|\\\s|\\|\n/).map(s=>s.trim()).filter(Boolean);
+    let answerIndex = null;
+    const options = rawOpts.map((o,i)=>{ if(o.endsWith('*')){ answerIndex = i; return o.replace(/\*+$/,'').trim(); } return o; });
+    cards.push({ q, options, answerIndex: (typeof answerIndex === 'number') ? answerIndex : null });
+  }
+  return cards;
+}
+
+function renderDeckList(){
+  deckListEl.innerHTML = '';
+  const q = (searchInput.value || '').trim().toLowerCase();
+  filteredDeckIndices = [];
+  decks.forEach((d, idx) => {
+    if(q){
+      if(!(d.name || '').toLowerCase().includes(q)) return;
+    }
+    filteredDeckIndices.push(idx);
+  });
+
+  if(filteredDeckIndices.length === 0){
+    deckListEl.innerHTML = '<div class="muted">No decks. Import a .txt to create one.</div>';
+    return;
+  }
+
+  filteredDeckIndices.forEach(idx=>{
+    const d = decks[idx];
+    const div = document.createElement('div'); div.className = 'deck-item';
+    div.innerHTML = `<div class="deck-left">
+        <div class="deck-name">${escape(d.name)}</div>
+        <div class="deck-meta">${d.cards.length} cards • ${new Date(d.createdAt).toLocaleString()}</div>
+      </div>
+      <div class="deck-actions">
+        <button class="btn" data-idx="${idx}" data-action="start">Start Practice</button>
+        <button class="btn" data-idx="${idx}" data-action="edit">Edit</button>
+        <button class="btn" data-idx="${idx}" data-action="delete">Delete</button>
+      </div>`;
+    deckListEl.appendChild(div);
+  });
+
+  deckListEl.querySelectorAll('button').forEach(btn=>{
+    btn.onclick = () => {
+      const idx = Number(btn.dataset.idx);
+      const action = btn.dataset.action;
+      if(action === 'start'){ openDeck(idx); }
+      else if(action === 'edit'){
+        // Your requested confirmation
+        if(confirm('Do you want to edit?')){
+          openEditModal(idx);
+        }
+      }
+      else if(action === 'delete'){
+        const ok = confirm('Are you sure you want to delete this deck?');
+        if(!ok) return;
+        decks.splice(idx,1); saveDecks(); renderDeckList();
+        if(activeDeck && activeDeck.id === decks[idx]?.id){ closePractice(); }
+      }
+    };
+  });
+}
+
+function openDeck(idx){
+  activeDeck = decks[idx];
+  beginPractice();
+}
+
+function openEditModal(idx){
+  editingDeckIndex = idx;
+  const deck = decks[idx];
+  modalTitle.textContent = `Edit: ${deck.name}`;
+  const raw = deck.rawText || buildRawFromCards(deck.cards);
+  modalTextarea.value = raw;
+  modalBack.style.display = 'flex';
+}
+
+modalCancel.onclick = () => { modalBack.style.display = 'none'; editingDeckIndex = null; };
+modalSave.onclick = () => {
+  if(editingDeckIndex === null) return;
+  const text = modalTextarea.value.trim();
+  const cards = parseTextToCards(text);
+  if(cards.length === 0){
+    if(!confirm('Parsed 0 cards. Save anyway? (Cancel to re-edit)')) return;
+  }
+  decks[editingDeckIndex].rawText = text;
+  decks[editingDeckIndex].cards = cards;
+  decks[editingDeckIndex].updatedAt = Date.now();
+  saveDecks();
+  modalBack.style.display = 'none';
+  editingDeckIndex = null;
+  renderDeckList();
+  if(activeDeck && activeDeck.id === decks[editingDeckIndex]?.id){
+    beginPractice();
+  }
+};
+
+function buildRawFromCards(cards){
+  return cards.map(c=>{
+    const opts = c.options.map((o, i) => (c.answerIndex === i) ? o + '*' : o).join(' \\ ');
+    return `[${c.q} || ${opts}]`;
+  }).join('\n\n');
+}
+
+function beginPractice(){
+  if(!activeDeck) return;
+  mode = 'normal';
+  const n = activeDeck.cards.length;
+  session = Array(n).fill('unattempted');
+  stats = {attempted:0,correct:0,incorrect:0,unattempted:n};
+  order = Array.from({length:n}, (_,i)=>i);
+  shuffle(order);
+  pos = 0;
+  noDeck.style.display = 'none';
+  practice.style.display = '';
+  summaryPanel.style.display = 'none';
+  renderCard();
+  updateStatsUI();
+}
+
+function closePractice(){
+  activeDeck = null; order = []; pos = 0; session = []; stats = {attempted:0,correct:0,incorrect:0,unattempted:0};
+  practice.style.display = 'none'; noDeck.style.display = '';
+  summaryPanel.style.display = 'none';
+  renderDeckList();
+  updateStatsUI();
+}
+
+function buildRelearnOrder(){
+  const incorrect = [], unattempted = [];
+  session.forEach((v,i)=>{ if(v==='wrong') incorrect.push(i); else if(v==='unattempted') unattempted.push(i); });
+  order = [...incorrect, ...unattempted];
+  pos = 0;
+  mode = 'relearn';
+  order.forEach(i => session[i] = 'unattempted');
+  stats = {attempted:0,correct:0,incorrect:0,unattempted: order.length};
+  summaryPanel.style.display = 'none';
+  renderCard();
+  updateStatsUI();
+}
+
+function renderCard(){
+  if(!activeDeck) return;
+  if(pos >= order.length){
+    showSummary();
+    return;
+  }
+  const cardIndex = order[pos];
+  const card = activeDeck.cards[cardIndex];
+  qTitle.textContent = card.q;
+  qMeta.textContent = `Card ${pos+1} of ${order.length}`;
+  const due = session.reduce((a,v)=> (v==='wrong' || v==='unattempted') ? a+1 : a , 0);
+  dueCount.textContent = `Due: ${due}`;
+
+  optionsEl.innerHTML = '';
+  const letters = ['a','b','c','d','e'];
+  card.options.forEach((opt,i)=>{
+    const d = document.createElement('div'); d.className='option'; d.dataset.opt=i;
+    d.innerHTML = `<div class="opt-label">${letters[i]||i+1}</div><div class="opt-text">${escape(opt)}</div>`;
+    optionsEl.appendChild(d);
+
+    d.onclick = () => {
+      if(session[cardIndex] !== 'unattempted') return;
+      optionsEl.querySelectorAll('.option').forEach(o => o.classList.add('locked'));
+      const chosen = i;
+      const correctIdx = (typeof card.answerIndex === 'number') ? card.answerIndex : null;
+      if(correctIdx !== null){
+        if(chosen === correctIdx){
+          d.classList.add('correct');
+          session[cardIndex] = 'correct';
+          stats.attempted++; stats.correct++;
+        } else {
+          d.classList.add('wrong');
+          const correctEl = optionsEl.querySelector(`.option[data-opt="${correctIdx}"]`);
+          if(correctEl) correctEl.classList.add('correct');
+          session[cardIndex] = 'wrong';
+          stats.attempted++; stats.incorrect++;
+        }
+      } else {
+        d.classList.add('wrong');
+        session[cardIndex] = 'wrong';
+        stats.attempted++; stats.incorrect++;
+      }
+      stats.unattempted = Math.max(0, activeDeck.cards.length - stats.attempted);
+      updateStatsUI();
+      setTimeout(()=>{ pos++; renderCard(); }, 450);
+    };
+  });
+}
+
+function showSummary(){
+  if(!activeDeck) return;
+  if(!session || session.length !== activeDeck.cards.length) session = Array(activeDeck.cards.length).fill('unattempted');
+  const correct = session.filter(x=>x==='correct').length;
+  const wrong = session.filter(x=>x==='wrong').length;
+  const unattempted = session.filter(x=>x==='unattempted').length;
+  stats = {attempted: correct + wrong, correct, incorrect: wrong, unattempted};
+  updateStatsUI();
+  incorrectList.innerHTML=''; unattemptedList.innerHTML='';
+  session.forEach((v,i)=>{ if(v==='wrong'){ const c=document.createElement('div'); c.className='chip'; c.textContent=`Q${i+1}`; incorrectList.appendChild(c); } if(v==='unattempted'){ const c=document.createElement('div'); c.className='chip'; c.textContent=`Q${i+1}`; unattemptedList.appendChild(c); } });
+  summaryPanel.style.display = '';
+  drawAccuracyChart(correct, wrong, unattempted, activeDeck.cards.length);
+  if((wrong + unattempted) > 0){ startRelearn.style.display=''; relearnStart.style.display=''; } else { startRelearn.style.display='none'; relearnStart.style.display='none'; }
+}
+
+function drawAccuracyChart(correct, wrong, unattempted, total){
+  accuracyChart.innerHTML = '';
+  const size = 140; const stroke = 12;
+  const radius = (size - stroke) / 2; const cx = size/2; const cy = size/2;
+  const circumference = 2*Math.PI*radius;
+  const cFrac = total ? correct/total : 0;
+  const wFrac = total ? wrong/total : 0;
+  const uFrac = total ? unattempted/total : 0;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width', size); svg.setAttribute('height', size); svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  function makeArc(color, fraction, offsetFrac){
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', radius);
+    circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', color); circle.setAttribute('stroke-width', stroke);
+    circle.setAttribute('stroke-linecap','round'); circle.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+    const dash = Math.max(0.0001, fraction * circumference);
+    circle.setAttribute('stroke-dasharray', `${dash} ${circumference - dash}`);
+    const offset = -offsetFrac * circumference;
+    circle.setAttribute('stroke-dashoffset', offset);
+    return circle;
+  }
+  const green = makeArc('#10b981', cFrac, 0);
+  const red = makeArc('#ff4d4f', wFrac, cFrac);
+  const blue = makeArc('#3b82f6', uFrac, cFrac + wFrac);
+  svg.appendChild(green); svg.appendChild(red); svg.appendChild(blue);
+  const inner = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  inner.setAttribute('cx', cx); inner.setAttribute('cy', cy); inner.setAttribute('r', radius - stroke/1.6);
+  inner.setAttribute('fill', 'rgba(255,255,255,0.02)'); svg.appendChild(inner);
+  const percent = total ? Math.round((correct/total)*100) : 0;
+  const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+  text.setAttribute('x', cx); text.setAttribute('y', cy + 6); text.setAttribute('text-anchor','middle');
+  text.setAttribute('font-size','26'); text.setAttribute('font-weight','700'); text.setAttribute('fill','white');
+  text.textContent = `${percent}%`;
+  svg.appendChild(text);
+  accuracyChart.appendChild(svg);
+}
+
+fileInput.addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  if(!f.name.toLowerCase().endsWith('.txt')){ if(!confirm('Selected file is not .txt. Attempt parse anyway?')) { e.target.value=''; return; } }
+  try{
+    const txt = await f.text();
+    const cards = parseTextToCards(txt);
+    if(cards.length === 0){ alert('No valid question blocks found. Ensure each block is inside [ ] and uses || and \\ separators.'); e.target.value=''; return; }
+    const name = prompt('Deck name', f.name.replace(/\.[^/.]+$/,'')) || f.name;
+    const deck = { id: uid(), name, createdAt: Date.now(), updatedAt: Date.now(), rawText: txt, cards };
+    decks.push(deck); saveDecks(); renderDeckList();
+    activeDeck = deck;
+    beginPractice();
+  } catch(err){ console.error(err); alert('Failed to read file.'); } finally { e.target.value=''; }
+});
+
+searchInput.addEventListener('input', () => { renderDeckList(); });
+
+startRelearn.onclick = () => { buildRelearnOrder(); };
+relearnStart.onclick = () => { buildRelearnOrder(); };
+finishSummary.onclick = () => { summaryPanel.style.display='none'; practice.style.display='none'; noDeck.style.display=''; activeDeck = null; renderDeckList(); };
+
+skipBtn.onclick = () => {
+  if(!activeDeck || order.length === 0) return;
+  if(pos >= order.length){ showSummary(); return; }
+  pos++;
+  renderCard();
+};
+
+finishBtn.onclick = () => { if(!activeDeck) return; showSummary(); };
+
+showAnswer.onclick = () => {
+  if(!activeDeck) return;
+  if(pos >= order.length) return;
+  const idx = order[pos];
+  const card = activeDeck.cards[idx];
+  if(card.answerIndex === null){ alert('No correct answer recorded for this card.'); return; }
+  const el = optionsEl.querySelector(`.option[data-opt="${card.answerIndex}"]`);
+  if(el){ el.classList.add('correct'); setTimeout(()=> el.classList.remove('correct'), 800); }
+};
+
+function updateStatsUI(){
+  statsEl.textContent = `Attempted: ${stats.attempted} • Correct: ${stats.correct} • Incorrect: ${stats.incorrect} • Unattempted: ${activeDeck ? (activeDeck.cards.length - stats.attempted) : 0}`;
+}
+function escape(s){ return String(s||'').replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+renderDeckList();
+noDeck.style.display=''; practice.style.display='none'; summaryPanel.style.display='none'; updateStatsUI();
+</script>
+</body>
+</html>

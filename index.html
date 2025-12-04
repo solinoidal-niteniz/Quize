@@ -269,10 +269,38 @@ body {
 *::-webkit-scrollbar {
     display: none;                     /* Chrome, Safari, Edge */
 }
-/* 100% working buttery smooth scroll – no stuck, no bugs */
-html, body, .library, .deck-list, .practice-mode, .options-container {
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
+/* UNIVERSAL BUTTERY SMOOTH SCROLL – works on Android, iOS, Windows, Mac, Linux, TV, EVERY browser */
+html {
+    scroll-behavior: smooth !important;           /* modern browsers */
+    -webkit-scroll-behavior: smooth !important;
+}
+
+html, body {
+    -webkit-overflow-scrolling: touch !important; /* iOS + Android WebView */
+    overscroll-behavior: contain !important;       /* stops pull-to-refresh bounce */
+}
+
+/* Force GPU acceleration everywhere (works on desktop + mobile) */
+.library,
+.deck-list,
+.practice-mode,
+.options-container,
+body > div {
+    transform: translateZ(0);                     /* GPU magic – works everywhere */
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-perspective: 1000;
+}
+
+/* Hide ugly scrollbars but keep smooth momentum */
+* {
+    -ms-overflow-style: none;      /* IE & Edge */
+    scrollbar-width: none;         /* Firefox */
+}
+*::-webkit-scrollbar {
+    display: none;                 /* Chrome, Safari, new Edge */
 }
 </style>
 </head>

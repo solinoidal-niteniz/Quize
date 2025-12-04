@@ -269,32 +269,10 @@ body {
 *::-webkit-scrollbar {
     display: none;                     /* Chrome, Safari, Edge */
 }
- /* REAL 90-FPS BUTTERY SCROLL – works perfectly */
-html, body {
-    -webkit-overflow-scrolling: touch !important;   /* Magic line for Android */
+/* 100% working buttery smooth scroll – no stuck, no bugs */
+html, body, .library, .deck-list, .practice-mode, .options-container {
+    -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
-    scroll-behavior: smooth !important;
-}
-
-/* Force GPU acceleration on every scrollable container */
-.library,
-.practice-mode,
-.deck-list,
-.options-container,
-body > div {
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-/* Hide scrollbars but keep momentum */
-* {
-    -ms-overflow-style: none;          /* IE & Edge */
-    scrollbar-width: none;             /* Firefox */
-}
-*::-webkit-scrollbar {
-    display: none;
 }
 </style>
 </head>

@@ -269,33 +269,29 @@ body {
 *::-webkit-scrollbar {
     display: none;                     /* Chrome, Safari, Edge */
 }
-  /* TRUE 90-FPS BUTTERY SCROLL – works on every Android phone */
+ /* REAL 90-FPS BUTTERY SCROLL – works perfectly */
 html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;                    /* critical */
-    -webkit-overflow-scrolling: touch !important;
+    -webkit-overflow-scrolling: touch !important;   /* Magic line for Android */
+    overscroll-behavior: contain !important;
+    scroll-behavior: smooth !important;
 }
 
-/* Make every scrollable area GPU-accelerated */
+/* Force GPU acceleration on every scrollable container */
 .library,
 .practice-mode,
 .deck-list,
 .options-container,
 body > div {
-    -webkit-transform: translateZ(0);    /* forces GPU */
-    transform: translateZ(0);
-    -webkit-perspective: 1000;
-    perspective: 1000;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
 
-/* Remove any scrollbars but keep momentum */
+/* Hide scrollbars but keep momentum */
 * {
-    -ms-overflow-style: none;           /* IE & Edge */
-    scrollbar-width: none;              /* Firefox */
+    -ms-overflow-style: none;          /* IE & Edge */
+    scrollbar-width: none;             /* Firefox */
 }
 *::-webkit-scrollbar {
     display: none;

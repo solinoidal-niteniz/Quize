@@ -187,6 +187,46 @@ button,
 input[type="file"]::file-selector-button {
     transition: all 0.15s ease !important;
 }
+ /* KILL ALL ANDROID TAP HIGHLIGHTS & DEFAULT FOCUS */
+*,
+*::before,
+*::after {
+    -webkit-tap-highlight-color: transparent !important;
+    tap-highlight-color: transparent !important;
+    outline: none !important;
+}
+
+/* Remove focus ring from every possible element */
+button,
+input,
+a,
+div,
+select,
+textarea,
+[tabindex],
+[role="button"] {
+    -webkit-focus-ring-color: transparent !important;
+    outline: none !important;
+}
+
+/* Apple-style press effect (glossy + press down) */
+button:active,
+input[type="file"]::file-selector-button:active,
+.select-button:active,
+.add-deck-btn:active {
+    background: linear-gradient(145deg, #f5f5f5, #d9d9d9) !important;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.25) !important;
+    transform: translateY(2px) !important;
+    transition: all 0.06s ease !important;
+}
+
+/* Smooth return */
+button,
+input[type="file"]::file-selector-button,
+.select-button,
+.add-deck-btn {
+    transition: all 0.18s ease !important;
+}
 </style>
 </head>
 <body>

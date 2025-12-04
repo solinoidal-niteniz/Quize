@@ -227,20 +227,23 @@ input[type="file"]::file-selector-button,
 .add-deck-btn {
     transition: all 0.18s ease !important;
 }
-  /* Instant press, smooth release – iOS feel */
+  /* Ultra-fast press – zero delay, super snappy */
 button:active,
 input[type="file"]::file-selector-button:active,
 .select-button:active,
 .add-deck-btn:active {
-    transition: none !important;           /* no delay when pressing */
+    transition: none !important;                    /* instant press */
+    transform: translateY(2px) !important;
+    background: linear-gradient(145deg, #eaeaea, #c8c8c8) !important;
+    box-shadow: inset 0 3px 7px rgba(0,0,0,0.25) !important;
 }
 
-/* Smooth return when you lift finger */
+/* Super-fast smooth release – 80ms only */
 button,
 input[type="file"]::file-selector-button,
 .select-button,
 .add-deck-btn {
-    transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease !important;
+    transition: transform 0.08s ease, background 0.08s ease, box-shadow 0.08s ease !important;
 }
 </style>
 </head>

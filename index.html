@@ -245,6 +245,30 @@ input[type="file"]::file-selector-button,
 .add-deck-btn {
     transition: transform 0.08s ease, background 0.08s ease, box-shadow 0.08s ease !important;
 }
+  /* Ultra-smooth scrolling + fix Android jitter */
+html,
+body {
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;   /* this is the magic line */
+    overscroll-behavior: contain !important;
+}
+
+/* Remove scroll lag on all scrollable containers */
+.library,
+.practice-mode,
+.deck-list,
+.options-container {
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+}
+
+/* Optional: extra buttery momentum on long lists */
+* {
+    scrollbar-width: none;             /* Firefox */
+}
+*::-webkit-scrollbar {
+    display: none;                     /* Chrome, Safari, Edge */
+}
 </style>
 </head>
 <body>
